@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS admins (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   username VARCHAR(255) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
@@ -7,32 +7,32 @@ CREATE TABLE IF NOT EXISTS admins (
 );
 
 CREATE TABLE IF NOT EXISTS services (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  price_range VARCHAR(50),
+  price_range VARCHAR(100),
   delivery_time VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS orders (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   customer_name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL,
   service_type VARCHAR(100) NOT NULL,
   project_title VARCHAR(255) NOT NULL,
   description TEXT,
-  customization JSON,
-  budget DECIMAL(10, 2),
-  deadline DATE,
-  status ENUM('pending', 'accepted', 'in_progress', 'review', 'completed') DEFAULT 'pending',
-  files JSON,
+  customization JSONB,
+  budget VARCHAR(50),
+  deadline VARCHAR(50),
+  status VARCHAR(50) DEFAULT 'pending',
+  files TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS files (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   order_id INT NOT NULL,
   file_path VARCHAR(255) NOT NULL,
   original_name VARCHAR(255) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS files (
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   type VARCHAR(100) NOT NULL,
   message TEXT NOT NULL,
   is_read BOOLEAN DEFAULT FALSE,
