@@ -7,12 +7,8 @@ module.exports = {
     init: (httpServer) => {
         io = new Server(httpServer, {
             cors: {
-                origin: [
-                    process.env.CLIENT_URL || "http://localhost:3000",
-                    process.env.ADMIN_URL || "http://localhost:3001"
-                ],
-                methods: ["GET", "POST", "PATCH", "DELETE"],
-                credentials: true
+                origin:     "*", // Allow all origins for the dual React apps
+                methods: ["GET", "POST", "PATCH", "DELETE"]
             }
         });
 
