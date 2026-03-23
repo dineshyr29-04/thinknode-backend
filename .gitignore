@@ -63,3 +63,51 @@ ehthumbs.db
 
 # Project specific
 uploads/
+*.sql
+*.sql.bak
+*.dump
+
+# Documentation (local guides)
+FRONTEND_GUIDE.md
+BACKEND_SETUP.md
+*.local.md
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-workspace
+*.sublime-project
+
+# IDE specific
+*.sublime-settings
+.vscode/launch.json
+.vscode/settings.json
+.idea/**
+.idea/misc.xml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/libraries/
+.idea/shelf
+
+# Mac OS
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+$RECYCLE.BIN/
+Desktop.ini
+
+# Database backups and dumps
+database/backups/
+*.backup
+*.restore
+
+# Local development
+local/
+temp/
+scratch/
