@@ -14,15 +14,12 @@ const processOrderCreation = async (orderData) => {
             }
         }
 
-        // Create new notification for dashboard
-        const [result] = await pool.query(
-            'INSERT INTO notifications (type, message) VALUES (?, ?)',
+        // Create new notification for dashboard (Postgres)
+        const notifResult = await pool.query(
+            'INSERT INTO notifications (type, message) VALUES ($1, $2) RETURNING *',
             ['new_order', `New order #${orderId} received from ${orderData.customer_name}`]
         );
-
-        // Fetch the inserted notification
-        const [notifications] = await pool.query('SELECT * FROM notifications WHERE id = ?', [result.insertId]);
-        const notification = notifications[0];
+        const notification = notifResult.rows[0];
 
         // Emit socket events
         try {
@@ -47,13 +44,11 @@ const processOrderStatusUpdate = async (id, status) => {
         if (affectedRows === 0) return false;
 
         // Create notification
-        const [result] = await pool.query(
-            'INSERT INTO notifications (type, message) VALUES (?, ?)',
+        const notifResult = await pool.query(
+            'INSERT INTO notifications (type, message) VALUES ($1, $2) RETURNING *',
             ['status_update', `Order #${id} status changed to ${status}`]
         );
-
-        const [notifications] = await pool.query('SELECT * FROM notifications WHERE id = ?', [result.insertId]);
-        const notification = notifications[0];
+        const notification = notifResult.rows[0];
 
         try {
             const io = socket.getIO();
