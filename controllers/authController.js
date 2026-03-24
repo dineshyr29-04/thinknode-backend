@@ -4,22 +4,29 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const { getIO } = require('../config/socket');
-
-const generateToken = (id, username, role = 'admin') => {
-    return jwt.sign({ id, username, role }, process.env.JWT_SECRET || 'thinknode_secret', {
-        expiresIn: '30d',
-    });
-};
-
-// ========== ADMIN FUNCTIONS ==========
-
-const registerAdmin = async (req, res, next) => {
     try {
-        const { username, email, password } = req.body;
+        // Accept flexible field names from frontend (username or name or fullName)
+        const body = req.body || {};
+        const username = body.username || body.name || body.full_name || body.fullName;
+        const email = body.email || body.mail;
+        const password = body.password || body.pass;
+        const full_name = body.full_name || body.fullName || body.name || null;
+        const phone = body.phone || body.phoneNumber || body.mobile || null;
+        const company_name = body.company_name || body.company || body.companyName || null;
 
-        const adminExists = await Admin.findByUsername(username);
+        logger.info('🔄 REGISTRATION STARTED');
+        logger.info(`📦 Full request body: ${JSON.stringify(body)}`);
+        logger.info(`📝 Mapped: username=${username || 'undefined'}, email=${email || 'undefined'}, password=${password ? '***' : 'MISSING'}`);
 
-        if (adminExists) {
+        // Validation
+        if (!username || !email || !password) {
+            logger.error('❌ VALIDATION FAILED - Missing required fields');
+            logger.error(`📦 Received body: ${JSON.stringify(body)}`);
+            logger.error(`Mapped variables: username="${username}", email="${email}", password="${password ? '***' : 'MISSING'}"`);
+            res.status(400);
+            throw new Error('Please provide username, email, and password');
+        }
+        logger.info('✅ Validation passed: All required fields provided');
             res.status(400);
             throw new Error('Admin username already exists');
         }
@@ -78,11 +85,14 @@ const registerCustomer = async (req, res, next) => {
         const { username, email, password, full_name, phone, company_name } = req.body;
 
         logger.info('🔄 REGISTRATION STARTED');
-        logger.info(`📝 Request: username=${username}, email=${email}`);
+        logger.info(`� Full request body: ${JSON.stringify(req.body)}`);
+        logger.info(`📝 Extracted: username=${username}, email=${email}, password=${password ? '***' : 'MISSING'}`);
 
         // Validation
         if (!username || !email || !password) {
-            logger.warn('❌ Validation failed: Missing required fields');
+            logger.error('❌ VALIDATION FAILED - Missing fields!');
+            logger.error(`📦 Received body: ${JSON.stringify(req.body)}`);
+            logger.error(`Variables: username="${username}", email="${email}", password="${password}"`);
             res.status(400);
             throw new Error('Please provide username, email, and password');
         }
