@@ -519,3 +519,16 @@ ADMIN_URL=https://your-admin-domain.com
 | "Token not persisting" | Check localStorage is being set; browser storage enabled |
 | "Cannot read property 'id' of undefined" | Customer not loaded from context; check AuthProvider wrapper |
 
+
+
+
+
+
+
+
+
+
+select departments.departmentName,
+max(employees.salary) as MaxSalary
+
+from 
