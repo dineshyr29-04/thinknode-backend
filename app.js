@@ -14,35 +14,21 @@ const app = express();
 const allowedOrigins = [
     process.env.CLIENT_URL || 'http://localhost:3000',
     process.env.ADMIN_URL || 'http://localhost:3001',
-    'http://localhost:5173',  // Vite dev server default
-    'http://127.0.0.1:5173',
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:5173',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001'
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:5173'
 ];
 
 // Middleware
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl requests)
-        if (!origin) {
-            logger.info('Request with no origin allowed (mobile/curl)');
-            return callback(null, true);
-        }
-
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            logger.info(`CORS allowed for origin: ${origin}`);
-            return callback(null, true);
-        }
-
-        // Log rejected origins for debugging
-        logger.warn(`CORS BLOCKED - Origin not allowed: ${origin}`);
-        logger.warn(`Allowed origins: ${allowedOrigins.join(', ')}`);
-        
-        callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true, // Important for cookies/authorization headers
+    origin: true, // Accept all origins in development
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 200
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
