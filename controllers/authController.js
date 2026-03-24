@@ -54,6 +54,7 @@ const { getIO } = require('../config/socket');
     } catch (error) {
         next(error);
     }
+
 };
 
 const loginAdmin = async (req, res, next) => {
