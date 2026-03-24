@@ -77,30 +77,44 @@ const registerCustomer = async (req, res, next) => {
     try {
         const { username, email, password, full_name, phone, company_name } = req.body;
 
+        logger.info('🔄 REGISTRATION STARTED');
+        logger.info(`📝 Request: username=${username}, email=${email}`);
+
         // Validation
         if (!username || !email || !password) {
+            logger.warn('❌ Validation failed: Missing required fields');
             res.status(400);
             throw new Error('Please provide username, email, and password');
         }
+        logger.info('✅ Validation passed: All required fields provided');
 
         // Check if customer already exists
+        logger.info('🔍 Checking if email already exists...');
         const emailExists = await Customer.findByEmail(email);
         if (emailExists) {
+            logger.warn(`❌ Email already registered: ${email}`);
             res.status(400);
             throw new Error('Email already registered');
         }
+        logger.info('✅ Email is unique');
 
+        logger.info('🔍 Checking if username already exists...');
         const usernameExists = await Customer.findByUsername(username);
         if (usernameExists) {
+            logger.warn(`❌ Username already taken: ${username}`);
             res.status(400);
             throw new Error('Username already taken');
         }
+        logger.info('✅ Username is unique');
 
         // Hash password
+        logger.info('🔐 Hashing password...');
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
+        logger.info('✅ Password hashed successfully');
 
         // Create customer
+        logger.info('💾 Creating customer in database...');
         const customer = await Customer.create({
             username,
             email,
@@ -111,7 +125,13 @@ const registerCustomer = async (req, res, next) => {
         });
 
         if (customer) {
+            logger.info(`✅ CUSTOMER CREATED IN DATABASE`);
+            logger.info(`📌 Customer ID: ${customer.id}`);
+            logger.info(`👤 Username: ${customer.username}`);
+            logger.info(`📧 Email: ${customer.email}`);
+            
             const token = generateToken(customer.id, customer.username, 'customer');
+            logger.info('🔑 JWT Token generated (expires in 30 days)');
 
             // Emit registration event via Socket.io
             try {
@@ -123,10 +143,19 @@ const registerCustomer = async (req, res, next) => {
                     full_name: customer.full_name,
                     timestamp: new Date()
                 });
-                logger.info(`New customer registered: ${customer.username}`);
+                logger.info('📡 Socket.io event emitted: customer:registered');
             } catch (ioError) {
-                logger.error('Socket.io emit error:', ioError);
+                logger.error('⚠️ Socket.io emit error:', ioError);
             }
+
+            logger.info('');
+            logger.info('════════════════════════════════════════');
+            logger.info('🎉 REGISTRATION SUCCESSFUL!');
+            logger.info('════════════════════════════════════════');
+            logger.info(`Customer ${username} has been registered`);
+            logger.info(`Check database or use: SELECT * FROM customers WHERE id = ${customer.id}`);
+            logger.info('════════════════════════════════════════');
+            logger.info('');
 
             res.status(201).json({
                 success: true,
@@ -142,10 +171,12 @@ const registerCustomer = async (req, res, next) => {
                 }
             });
         } else {
+            logger.error('❌ Failed to create customer - no data returned');
             res.status(400);
             throw new Error('Invalid customer data');
         }
     } catch (error) {
+        logger.error(`❌ REGISTRATION ERROR: ${error.message}`);
         next(error);
     }
 };
