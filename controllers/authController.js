@@ -4,17 +4,20 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const { getIO } = require('../config/socket');
+
+const generateToken = (id, username, role) => {
+    return jwt.sign({ id, username, role }, process.env.JWT_SECRET || 'secret', { expiresIn: '30d' });
+};
+
+const registerAdmin = async (req, res, next) => {
     try {
         // Accept flexible field names from frontend (username or name or fullName)
         const body = req.body || {};
         const username = body.username || body.name || body.full_name || body.fullName;
         const email = body.email || body.mail;
         const password = body.password || body.pass;
-        const full_name = body.full_name || body.fullName || body.name || null;
-        const phone = body.phone || body.phoneNumber || body.mobile || null;
-        const company_name = body.company_name || body.company || body.companyName || null;
 
-        logger.info('🔄 REGISTRATION STARTED');
+        logger.info('🔄 ADMIN REGISTRATION STARTED');
         logger.info(`📦 Full request body: ${JSON.stringify(body)}`);
         logger.info(`📝 Mapped: username=${username || 'undefined'}, email=${email || 'undefined'}, password=${password ? '***' : 'MISSING'}`);
 
@@ -22,25 +25,36 @@ const { getIO } = require('../config/socket');
         if (!username || !email || !password) {
             logger.error('❌ VALIDATION FAILED - Missing required fields');
             logger.error(`📦 Received body: ${JSON.stringify(body)}`);
-            logger.error(`Mapped variables: username="${username}", email="${email}", password="${password ? '***' : 'MISSING'}"`);
             res.status(400);
             throw new Error('Please provide username, email, and password');
         }
-        logger.info('✅ Validation passed: All required fields provided');
+
+        // Check if admin already exists
+        const usernameExists = await Admin.findByUsername(username);
+        if (usernameExists) {
+            logger.warn(`❌ Admin username already exists: ${username}`);
             res.status(400);
             throw new Error('Admin username already exists');
+        }
+
+        const emailExists = await Admin.findByEmail?.(email);
+        if (emailExists) {
+            logger.warn(`❌ Admin email already exists: ${email}`);
+            res.status(400);
+            throw new Error('Admin email already exists');
         }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const adminId = await Admin.create({
+        const admin = await Admin.create({
             username,
             email,
             password: hashedPassword
         });
 
-        if (adminId) {
+        if (admin) {
+            const adminId = admin.id || admin;
             res.status(201).json({
                 id: adminId,
                 username: username,
@@ -52,9 +66,9 @@ const { getIO } = require('../config/socket');
             throw new Error('Invalid admin data');
         }
     } catch (error) {
+        logger.error(`❌ ADMIN REGISTRATION ERROR: ${error.message}`);
         next(error);
     }
-
 };
 
 const loginAdmin = async (req, res, next) => {
@@ -83,17 +97,24 @@ const loginAdmin = async (req, res, next) => {
 
 const registerCustomer = async (req, res, next) => {
     try {
-        const { username, email, password, full_name, phone, company_name } = req.body;
+        // Accept flexible field names from frontend
+        const body = req.body || {};
+        const username = body.username || body.name || body.full_name || body.fullName;
+        const email = body.email;
+        const password = body.password;
+        const full_name = body.full_name || body.fullName || body.name || null;
+        const phone = body.phone || body.phoneNumber || body.mobile || null;
+        const company_name = body.company_name || body.company || body.companyName || null;
 
         logger.info('🔄 REGISTRATION STARTED');
-        logger.info(`� Full request body: ${JSON.stringify(req.body)}`);
-        logger.info(`📝 Extracted: username=${username}, email=${email}, password=${password ? '***' : 'MISSING'}`);
+        logger.info(`📦 Full request body: ${JSON.stringify(body)}`);
+        logger.info(`📝 Mapped: username=${username || 'undefined'}, email=${email || 'undefined'}, password=${password ? '***' : 'MISSING'}`);
 
         // Validation
         if (!username || !email || !password) {
-            logger.error('❌ VALIDATION FAILED - Missing fields!');
-            logger.error(`📦 Received body: ${JSON.stringify(req.body)}`);
-            logger.error(`Variables: username="${username}", email="${email}", password="${password}"`);
+            logger.error('❌ VALIDATION FAILED - Missing required fields');
+            logger.error(`📦 Received body: ${JSON.stringify(body)}`);
+            logger.error(`Mapped: username="${username}", email="${email}", password="${password ? '***' : 'MISSING'}"`);
             res.status(400);
             throw new Error('Please provide username, email, and password');
         }
