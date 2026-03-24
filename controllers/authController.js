@@ -185,15 +185,33 @@ const loginCustomer = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
+        logger.info('🔄 LOGIN STARTED');
+        logger.info(`📧 Email: ${email}`);
+
         if (!email || !password) {
+            logger.warn('❌ Validation failed: Missing email or password');
             res.status(400);
             throw new Error('Please provide email and password');
         }
+        logger.info('✅ Validation passed');
 
+        logger.info('🔍 Looking up customer by email...');
         const customer = await Customer.findByEmail(email);
 
-        if (customer && (await bcrypt.compare(password, customer.password))) {
+        if (!customer) {
+            logger.warn(`❌ Customer not found: ${email}`);
+            res.status(401);
+            throw new Error('Invalid email or password');
+        }
+        logger.info(`✅ Customer found: ${customer.username}`);
+
+        logger.info('🔐 Verifying password...');
+        const passwordMatch = await bcrypt.compare(password, customer.password);
+        
+        if (passwordMatch) {
+            logger.info('✅ Password verified!');
             const token = generateToken(customer.id, customer.username, 'customer');
+            logger.info('🔑 JWT Token generated');
 
             // Emit login event via Socket.io
             try {
@@ -203,9 +221,18 @@ const loginCustomer = async (req, res, next) => {
                     username: customer.username,
                     timestamp: new Date()
                 });
+                logger.info('📡 Socket.io event emitted: customer:loggedIn');
             } catch (ioError) {
-                logger.error('Socket.io emit error:', ioError);
+                logger.error('⚠️ Socket.io emit error:', ioError);
             }
+
+            logger.info('');
+            logger.info('════════════════════════════════════════');
+            logger.info('🎉 LOGIN SUCCESSFUL!');
+            logger.info('════════════════════════════════════════');
+            logger.info(`Customer: ${customer.username} (ID: ${customer.id})`);
+            logger.info('════════════════════════════════════════');
+            logger.info('');
 
             res.json({
                 success: true,
@@ -221,10 +248,12 @@ const loginCustomer = async (req, res, next) => {
                 }
             });
         } else {
+            logger.warn(`❌ Password verification failed for: ${email}`);
             res.status(401);
             throw new Error('Invalid email or password');
         }
     } catch (error) {
+        logger.error(`❌ LOGIN ERROR: ${error.message}`);
         next(error);
     }
 };
