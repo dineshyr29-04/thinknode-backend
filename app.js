@@ -16,13 +16,15 @@ const app = express();
 // Allowed Front-end Origins
 const allowedOrigins = [
     process.env.CLIENT_URL || 'http://localhost:3000',
+    'https://thinknode-customer.vercel.app/',
     process.env.ADMIN_URL || 'http://localhost:3001',
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    'https://thinknode-admin.vercel.app/'
 ];
 
 // Middleware
