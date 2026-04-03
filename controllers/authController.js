@@ -93,6 +93,31 @@ const loginAdmin = async (req, res, next) => {
     }
 };
 
+const getAdminProfile = async (req, res, next) => {
+    try {
+        const adminId = req.admin?.id;
+
+        if (!adminId) {
+            res.status(401);
+            throw new Error('Unauthorized - Please login as admin');
+        }
+
+        const admin = await Admin.findById(adminId);
+
+        if (!admin) {
+            res.status(404);
+            throw new Error('Admin not found');
+        }
+
+        res.json({
+            success: true,
+            data: admin
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // ========== CUSTOMER FUNCTIONS ==========
 
 const registerCustomer = async (req, res, next) => {
@@ -356,6 +381,7 @@ const updateCustomerProfile = async (req, res, next) => {
 module.exports = {
     registerAdmin,
     loginAdmin,
+    getAdminProfile,
     registerCustomer,
     loginCustomer,
     getCustomerProfile,

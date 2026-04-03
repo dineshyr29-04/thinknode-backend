@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { getServices, createService, updateService, deleteService } = require('../controllers/serviceController');
-const { protect } = require('../middleware/authMiddleware');
+const { adminAuth } = require('../middleware/authMiddleware');
 
 router.route('/')
     .get(getServices)
-    .post(protect, createService);
+    .post(adminAuth, createService);
 
 router.route('/:id')
-    .patch(protect, updateService)
-    .delete(protect, deleteService);
+    .patch(adminAuth, updateService)
+    .delete(adminAuth, deleteService);
 
 module.exports = router;

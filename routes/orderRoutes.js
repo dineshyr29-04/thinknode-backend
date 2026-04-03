@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { createOrder, getOrders, getOrderById, updateOrderStatus, deleteOrder } = require('../controllers/orderController');
-const { protect } = require('../middleware/authMiddleware');
+const { adminAuth } = require('../middleware/authMiddleware');
 
 // Ensure uploads directory exists
 const uploadDir = 'uploads/';
@@ -29,14 +29,14 @@ const upload = multer({
 });
 
 router.route('/')
-    .get(protect, getOrders)
+    .get(adminAuth, getOrders)
     .post(upload.array('files', 5), createOrder);
 
 router.route('/:id')
-    .get(protect, getOrderById)
-    .delete(protect, deleteOrder);
+    .get(adminAuth, getOrderById)
+    .delete(adminAuth, deleteOrder);
 
 router.route('/:id/status')
-    .patch(protect, updateOrderStatus);
+    .patch(adminAuth, updateOrderStatus);
 
 module.exports = router;

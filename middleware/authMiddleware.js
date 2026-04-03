@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const protect = (req, res, next) => {
+const adminAuth = (req, res, next) => {
     let token;
 
     if (
@@ -25,7 +25,7 @@ const protect = (req, res, next) => {
     }
 };
 
-const authMiddleware = (req, res, next) => {
+const customerAuth = (req, res, next) => {
     let token;
 
     if (
@@ -59,4 +59,4 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = { protect, authMiddleware };
+module.exports = { adminAuth, customerAuth };

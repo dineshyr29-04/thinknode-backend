@@ -4,10 +4,8 @@ const path = require('path');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const logger = require('./utils/logger');
 
-const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const customerRoutes = require('./routes/customerRoutes');
-const legacyAuthRoutes = require('./routes/legacyAuthRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 
@@ -42,14 +40,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
-// New, explicit versioned roots
-app.use('/api/v1/admin', adminRoutes);
-app.use('/api/v1/customer', customerRoutes);
-// Legacy compatibility: support old auth paths like /api/v1/auth/signup
-app.use('/api/v1/auth', legacyAuthRoutes);
-
-// Keep existing unversioned auth routes for backwards compatibility (optional)
-app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/customer', customerRoutes);
 
 app.use('/api/services', serviceRoutes);
 app.use('/api/orders', orderRoutes);
