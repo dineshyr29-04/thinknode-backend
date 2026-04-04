@@ -1,5 +1,5 @@
 const http = require('http');
-const { app, allowedOrigins } = require('./app');
+const { app } = require('./app');
 const socketConfig = require('./config/socket');
 const logger = require('./utils/logger');
 require('dotenv').config();
@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
 // Initialize Socket.io
-socketConfig.init(server, allowedOrigins);
+socketConfig.init(server);
 
 // Start server
 server.listen(PORT, () => {

@@ -11,20 +11,6 @@ const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 
-// Allowed Front-end Origins
-const allowedOrigins = [
-    process.env.CLIENT_URL || 'http://localhost:3000',
-    'https://thinknode-customer.vercel.app',
-    process.env.ADMIN_URL || 'http://localhost:3001',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://127.0.0.1:5173',
-    'https://thinknode-admin.vercel.app'
-];
-
 // Middleware
 app.use((req, res, next) => {
     // Handle Private Network Access (PNA) checks from browsers like Chrome
@@ -35,7 +21,9 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: function(origin, callback) {
+        callback(null, true); // Allow any origin for maximum compatibility with Vercel preview links
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
@@ -58,4 +46,4 @@ app.use('/api/orders', orderRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-module.exports = { app, allowedOrigins };
+module.exports = app;
