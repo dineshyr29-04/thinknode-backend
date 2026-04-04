@@ -4,10 +4,10 @@ const logger = require("../utils/logger");
 let io;
 
 module.exports = {
-    init: (httpServer) => {
+    init: (httpServer, allowedOrigins) => {
         io = new Server(httpServer, {
             cors: {
-                origin: "*", // Allow all origins for the dual React apps
+                origin: allowedOrigins || "*",
                 methods: ["GET", "POST", "PATCH", "DELETE"]
             }
         });

@@ -14,7 +14,7 @@ const app = express();
 // Allowed Front-end Origins
 const allowedOrigins = [
     process.env.CLIENT_URL || 'http://localhost:3000',
-    'https://thinknode-customer.vercel.app/',
+    'https://thinknode-customer.vercel.app',
     process.env.ADMIN_URL || 'http://localhost:3001',
     'http://localhost:3000',
     'http://localhost:3001',
@@ -22,7 +22,7 @@ const allowedOrigins = [
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
     'http://127.0.0.1:5173',
-    'https://thinknode-admin.vercel.app/'
+    'https://thinknode-admin.vercel.app'
 ];
 
 // Middleware
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-    origin: true, // Accept all origins in development
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
@@ -58,4 +58,4 @@ app.use('/api/orders', orderRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-module.exports = app;
+module.exports = { app, allowedOrigins };
