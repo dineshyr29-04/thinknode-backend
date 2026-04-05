@@ -54,7 +54,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/customer', customerRoutes);
 
 app.use('/api/services', serviceRoutes);
-app.use('/api/orders', orderRoutes);
+app.use('/api/upload', orderRoutes);
 
 // Health check for quick remote connectivity tests
 app.get('/health', (req, res) => res.status(200).send('ok'));
