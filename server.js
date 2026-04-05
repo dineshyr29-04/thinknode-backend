@@ -1,5 +1,5 @@
 const http = require('http');
-const { app } = require('./app');
+const app = require('./app');
 const socketConfig = require('./config/socket');
 const logger = require('./utils/logger');
 require('dotenv').config();
