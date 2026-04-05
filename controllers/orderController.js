@@ -11,6 +11,20 @@ const createOrder = async (req, res, next) => {
             files: req.files ? req.files.map(f => f.path) : req.body.files
         };
 
+        // Ensure we have a customer name to satisfy DB NOT NULL constraint.
+        // Prefer authenticated user info if present, else check common body fields, else fallback to 'Anonymous'.
+        const inferredName = req.user?.username || req.user?.full_name || req.body.customer_name || req.body.full_name || req.body.name || req.body.username;
+        if (!orderData.customer_name) {
+            if (inferredName) {
+                orderData.customer_name = inferredName;
+            } else {
+                orderData.customer_name = 'Anonymous';
+                // Log this so we can later enforce proper validation if needed
+                const logger = require('../utils/logger');
+                logger.warn('Order created without customer_name in request; using fallback "Anonymous"');
+            }
+        }
+
         if (typeof orderData.customization === 'string') {
             try {
                 orderData.customization = JSON.parse(orderData.customization);
