@@ -11,6 +11,17 @@ const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 
+// Simple request logger to surface incoming requests (helps diagnose deployed timeouts)
+app.use((req, res, next) => {
+    try {
+        logger.info(`[REQUEST] ${req.method} ${req.originalUrl} from ${req.ip}`);
+    } catch (e) {
+        // don't let logging break requests
+        console.error('Logger failed', e);
+    }
+    next();
+});
+
 app.use((req, res, next) => {
     const origin = req.headers.origin;
     if (origin) {
@@ -44,6 +55,9 @@ app.use('/api/customer', customerRoutes);
 
 app.use('/api/services', serviceRoutes);
 app.use('/api/orders', orderRoutes);
+
+// Health check for quick remote connectivity tests
+app.get('/health', (req, res) => res.status(200).send('ok'));
 
 // Error Handling Middleware
 app.use(notFound);
