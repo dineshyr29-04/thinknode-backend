@@ -25,6 +25,16 @@ const createOrder = async (req, res, next) => {
             }
         }
 
+        // Validate required fields to avoid DB NOT NULL errors
+        const required = ['service_type'];
+        const missing = required.filter(f => !orderData[f]);
+        if (missing.length > 0) {
+            const logger = require('../utils/logger');
+            logger.warn(`Order creation failed - missing required fields: ${missing.join(', ')}`);
+            res.status(400);
+            throw new Error(`Missing required fields: ${missing.join(', ')}`);
+        }
+
         if (typeof orderData.customization === 'string') {
             try {
                 orderData.customization = JSON.parse(orderData.customization);
