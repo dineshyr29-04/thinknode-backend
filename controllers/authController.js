@@ -73,9 +73,14 @@ const registerAdmin = async (req, res, next) => {
 
 const loginAdmin = async (req, res, next) => {
     try {
-        const { username, password } = req.body;
+        const { email, password } = req.body;
 
-        const admin = await Admin.findByUsername(username);
+        if (!email || !password) {
+            res.status(400);
+            throw new Error('Please provide email and password');
+        }
+
+        const admin = await Admin.findByEmail(email);
 
         if (admin && (await bcrypt.compare(password, admin.password))) {
             res.json({
@@ -86,7 +91,7 @@ const loginAdmin = async (req, res, next) => {
             });
         } else {
             res.status(401);
-            throw new Error('Invalid username or password');
+            throw new Error('Invalid email or password');
         }
     } catch (error) {
         next(error);

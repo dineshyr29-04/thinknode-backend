@@ -5,6 +5,10 @@ const adminModel = {
         const result = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
         return result.rows[0];
     },
+    findByEmail: async (email) => {
+        const result = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
+        return result.rows[0];
+    },
     findById: async (id) => {
         const result = await pool.query('SELECT id, username, email, created_at FROM admins WHERE id = $1', [id]);
         return result.rows[0];
