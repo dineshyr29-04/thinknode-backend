@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const { getIO } = require('../config/socket');
+const pool = require('../config/database');
 
 const generateToken = (id, username, role) => {
     return jwt.sign({ id, username, role }, process.env.JWT_SECRET || 'secret', { expiresIn: '30d' });
@@ -29,15 +30,27 @@ const registerAdmin = async (req, res, next) => {
             throw new Error('Please provide username, email, and password');
         }
 
-        // Check if admin already exists
-        const usernameExists = await Admin.findByUsername(username);
+        // Check if admin already exists (use model if available, otherwise fallback to direct query)
+        let usernameExists = null;
+        if (Admin && typeof Admin.findByUsername === 'function') {
+            usernameExists = await Admin.findByUsername(username);
+        } else {
+            const r = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
+            usernameExists = r.rows[0];
+        }
         if (usernameExists) {
             logger.warn(`❌ Admin username already exists: ${username}`);
             res.status(400);
             throw new Error('Admin username already exists');
         }
 
-        const emailExists = await Admin.findByEmail?.(email);
+        let emailExists = null;
+        if (Admin && typeof Admin.findByEmail === 'function') {
+            emailExists = await Admin.findByEmail(email);
+        } else {
+            const r2 = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
+            emailExists = r2.rows[0];
+        }
         if (emailExists) {
             logger.warn(`❌ Admin email already exists: ${email}`);
             res.status(400);
