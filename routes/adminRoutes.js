@@ -5,6 +5,8 @@ const { adminAuth } = require('../middleware/authMiddleware');
 
 // Admin public endpoints
 router.post('/register', registerAdmin);
+// alias for frontend: /signup
+router.post('/signup', registerAdmin);
 router.post('/login', loginAdmin);
 
 // Admin protected endpoints
