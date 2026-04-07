@@ -7,7 +7,7 @@ const { getIO } = require('../config/socket');
 const pool = require('../config/database');
 
 const generateToken = (id, username, role) => {
-    return jwt.sign({ id, username, role }, process.env.JWT_SECRET || 'secret', { expiresIn: '30d' });
+    return jwt.sign({ id, username, role }, process.env.JWT_SECRET || 'thinknode_secret', { expiresIn: '30d' });
 };
 
 const registerAdmin = async (req, res, next) => {
@@ -235,15 +235,13 @@ const registerCustomer = async (req, res, next) => {
             res.status(201).json({
                 success: true,
                 message: 'Customer registered successfully',
-                data: {
-                    id: customer.id,
-                    username: customer.username,
-                    email: customer.email,
-                    full_name: customer.full_name,
-                    phone: customer.phone,
-                    company_name: customer.company_name,
-                    token: token,
-                }
+                id: customer.id,
+                username: customer.username,
+                email: customer.email,
+                full_name: customer.full_name,
+                phone: customer.phone,
+                company_name: customer.company_name,
+                token: token,
             });
         } else {
             logger.error('❌ Failed to create customer - no data returned');
@@ -312,15 +310,13 @@ const loginCustomer = async (req, res, next) => {
             res.json({
                 success: true,
                 message: 'Login successful',
-                data: {
-                    id: customer.id,
-                    username: customer.username,
-                    email: customer.email,
-                    full_name: customer.full_name,
-                    phone: customer.phone,
-                    company_name: customer.company_name,
-                    token: token,
-                }
+                id: customer.id,
+                username: customer.username,
+                email: customer.email,
+                full_name: customer.full_name,
+                phone: customer.phone,
+                company_name: customer.company_name,
+                token: token,
             });
         } else {
             logger.warn(`❌ Password verification failed for: ${email}`);

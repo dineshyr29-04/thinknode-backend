@@ -16,12 +16,22 @@ const adminAuth = (req, res, next) => {
 
             return next();
         } catch (error) {
-            return res.status(401).json({ message: 'Not authorized, token failed' });
+            const logger = require('../utils/logger');
+            logger.error(`[AUTH] Admin token validation failed: ${error.message}`);
+            return res.status(401).json({ 
+                success: false,
+                message: 'Not authorized, token failed' 
+            });
         }
     }
 
     if (!token) {
-        return res.status(401).json({ message: 'Not authorized, no token' });
+        const logger = require('../utils/logger');
+        logger.warn(`[AUTH] No admin token provided for ${req.originalUrl}`);
+        return res.status(401).json({ 
+            success: false,
+            message: 'Not authorized, no token' 
+        });
     }
 };
 
@@ -51,12 +61,14 @@ const customerAuth = (req, res, next) => {
         }
     }
 
-    if (!token) {
-        return res.status(401).json({ 
-            success: false,
-            message: 'Not authorized, no token provided' 
-        });
-    }
+        if (!token) {
+            const logger = require('../utils/logger');
+            logger.warn(`[AUTH] No customer token provided for ${req.originalUrl}`);
+            return res.status(401).json({ 
+                success: false,
+                message: 'Not authorized, no token provided' 
+            });
+        }
 };
 
 module.exports = { adminAuth, customerAuth };
