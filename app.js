@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const logger = require('./utils/logger');
 
@@ -10,6 +12,22 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
+
+// Security Middlewares
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window`
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Too many requests from this IP, please try again after 15 minutes"
+    }
+});
+app.use('/api/', limiter);
 
 // Simple request logger to surface incoming requests (helps diagnose deployed timeouts)
 app.use((req, res, next) => {
@@ -54,7 +72,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/customer', customerRoutes);
 
 app.use('/api/services', serviceRoutes);
-app.use('/api/customer/orders', orderRoutes);
 
 // Health check for quick remote connectivity tests
 app.get('/health', (req, res) => res.status(200).send('ok'));

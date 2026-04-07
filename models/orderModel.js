@@ -2,7 +2,18 @@ const pool = require('../config/database');
 
 const orderModel = {
     create: async (orderData) => {
-        const { customer_name, email, service_type, project_title, description, customization, budget, deadline, files } = orderData;
+        const { 
+            customer_id, 
+            customer_name, 
+            email, 
+            service_type, 
+            project_title, 
+            description, 
+            customization, 
+            budget, 
+            deadline, 
+            files 
+        } = orderData;
 
         // We stringify JSON fields
         const customJson = customization ? JSON.stringify(customization) : null;
@@ -10,9 +21,9 @@ const orderModel = {
 
         const result = await pool.query(
             `INSERT INTO orders 
-      (customer_name, email, service_type, project_title, description, customization, budget, deadline, files) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-            [customer_name, email, service_type, project_title, description, customJson, budget, deadline, filesJson]
+            (customer_id, customer_name, email, service_type, project_title, description, customization, budget, deadline, files) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+            [customer_id, customer_name, email, service_type, project_title, description, customJson, budget, deadline, filesJson]
         );
 
         return result.rows[0].id;
@@ -26,6 +37,11 @@ const orderModel = {
     findById: async (id) => {
         const result = await pool.query('SELECT * FROM orders WHERE id = $1', [id]);
         return result.rows[0];
+    },
+
+    findByCustomerId: async (customerId) => {
+        const result = await pool.query('SELECT * FROM orders WHERE customer_id = $1 ORDER BY created_at DESC', [customerId]);
+        return result.rows;
     },
 
     updateStatus: async (id, status) => {

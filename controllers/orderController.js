@@ -1,45 +1,34 @@
 const Order = require('../models/orderModel');
 const orderService = require('../services/orderService');
+const logger = require('../utils/logger');
 
 const createOrder = async (req, res, next) => {
     try {
         const orderData = {
             ...req.body,
+            // Link to authenticated user if present
+            customer_id: req.user?.id || null,
             fileDetails: req.files || [],
-            // For compatibility if they send JSON stringified files in body instead of actual files,
-            // handled by our service that saves file records. I'll pass simple file metadata if we have multer files:
             files: req.files ? req.files.map(f => f.path) : req.body.files
         };
 
         // Ensure we have a customer name to satisfy DB NOT NULL constraint.
-        // Prefer authenticated user info if present, else check common body fields, else fallback to 'Anonymous'.
-        const inferredName = req.user?.username || req.user?.full_name || req.body.customer_name || req.body.full_name || req.body.name || req.body.username;
+        const inferredName = req.user?.username || req.user?.full_name || req.body.customer_name || 'Anonymous';
         if (!orderData.customer_name) {
-            if (inferredName) {
-                orderData.customer_name = inferredName;
-            } else {
-                orderData.customer_name = 'Anonymous';
-                // Log this so we can later enforce proper validation if needed
-                const logger = require('../utils/logger');
-                logger.warn('Order created without customer_name in request; using fallback "Anonymous"');
-            }
+            orderData.customer_name = inferredName;
         }
 
-        // Validate required fields to avoid DB NOT NULL errors
-        const required = ['service_type'];
-        const missing = required.filter(f => !orderData[f]);
-        if (missing.length > 0) {
-            const logger = require('../utils/logger');
-            logger.warn(`Order creation failed - missing required fields: ${missing.join(', ')}`);
+        // Validate required fields
+        if (!orderData.service_type) {
             res.status(400);
-            throw new Error(`Missing required fields: ${missing.join(', ')}`);
+            throw new Error('Service type is required');
         }
 
         if (typeof orderData.customization === 'string') {
             try {
                 orderData.customization = JSON.parse(orderData.customization);
             } catch (err) {
-                // Ignored, proceed as string if invalid JSON
+                // proceed as string if invalid JSON
             }
         }
 
@@ -49,7 +38,10 @@ const createOrder = async (req, res, next) => {
         // Fetch related DB records for files
         createdOrder.file_details = await Order.getFilesByOrderId(orderId);
 
-        res.status(201).json(createdOrder);
+        res.status(201).json({
+            success: true,
+            data: createdOrder
+        });
     } catch (error) {
         next(error);
     }
@@ -58,7 +50,28 @@ const createOrder = async (req, res, next) => {
 const getOrders = async (req, res, next) => {
     try {
         const orders = await Order.findAll();
-        res.json(orders);
+        res.json({
+            success: true,
+            data: orders
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getMyOrders = async (req, res, next) => {
+    try {
+        const customerId = req.user?.id;
+        if (!customerId) {
+            res.status(401);
+            throw new Error('Not authorized, no user ID found');
+        }
+
+        const orders = await Order.findByCustomerId(customerId);
+        res.json({
+            success: true,
+            data: orders
+        });
     } catch (error) {
         next(error);
     }
@@ -67,13 +80,24 @@ const getOrders = async (req, res, next) => {
 const getOrderById = async (req, res, next) => {
     try {
         const order = await Order.findById(req.params.id);
-        if (order) {
-            order.file_details = await Order.getFilesByOrderId(req.params.id);
-            res.json(order);
-        } else {
+        
+        if (!order) {
             res.status(404);
             throw new Error('Order not found');
         }
+
+        // Security check: Only Admn or the owner can see the order
+        // Admin middleware handles the route, but if it's a shared controller:
+        if (req.user && order.customer_id !== req.user.id) {
+            res.status(403);
+            throw new Error('Not authorized to access this order');
+        }
+
+        order.file_details = await Order.getFilesByOrderId(req.params.id);
+        res.json({
+            success: true,
+            data: order
+        });
     } catch (error) {
         next(error);
     }
@@ -84,14 +108,18 @@ const updateOrderStatus = async (req, res, next) => {
         const { status } = req.body;
         if (!status) {
             res.status(400);
-            throw new Error('Status requires a value');
+            throw new Error('Status is required');
         }
 
         const success = await orderService.processOrderStatusUpdate(req.params.id, status);
 
         if (success) {
             const updatedOrder = await Order.findById(req.params.id);
-            res.json(updatedOrder);
+            res.json({
+                success: true,
+                message: 'Order status updated',
+                data: updatedOrder
+            });
         } else {
             res.status(404);
             throw new Error('Order not found');
@@ -105,7 +133,10 @@ const deleteOrder = async (req, res, next) => {
     try {
         const affectedRows = await Order.delete(req.params.id);
         if (affectedRows) {
-            res.json({ message: 'Order removed' });
+            res.json({ 
+                success: true,
+                message: 'Order removed' 
+            });
         } else {
             res.status(404);
             throw new Error('Order not found');
@@ -118,6 +149,7 @@ const deleteOrder = async (req, res, next) => {
 module.exports = {
     createOrder,
     getOrders,
+    getMyOrders,
     getOrderById,
     updateOrderStatus,
     deleteOrder
