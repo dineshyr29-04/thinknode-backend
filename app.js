@@ -62,24 +62,13 @@ const corsOriginMap = [
     }
 ];
 
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (!origin) return next();
-    const match = corsOriginMap.find(
-        entry => origin === entry.origin && req.path.startsWith(entry.pathPrefix)
-    );
-    if (match) {
-        cors({
-            origin: match.origin,
-            credentials: true,
-            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
-            exposedHeaders: ['Access-Control-Allow-Private-Network']
-        })(req, res, next);
-    } else {
-        res.status(403).json({ success: false, message: 'CORS policy: This origin is not allowed for this endpoint.' });
-    }
-});
+app.use(cors({
+    origin: true, // Reflects the request origin, effectively allowing all
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
+    exposedHeaders: ['Access-Control-Allow-Private-Network']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
