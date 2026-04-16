@@ -40,27 +40,27 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (origin) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-    } else {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-    }
-    
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Access-Control-Allow-Private-Network');
-    
-    // Handle Private Network Access (PNA) checks from browsers like Chrome
-    res.setHeader('Access-Control-Allow-Private-Network', 'true');
+const allowedOrigins = [
+    'https://thinknode-customer.vercel.app',
+    'https://thinknode-admin.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:5174'
+];
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    next();
-});
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, false); // Block requests with no origin (e.g., curl, Postman)
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        } else {
+            return callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
+    exposedHeaders: ['Access-Control-Allow-Private-Network']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
