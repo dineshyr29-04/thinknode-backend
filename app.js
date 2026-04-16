@@ -40,27 +40,46 @@ app.use((req, res, next) => {
     next();
 });
 
-const allowedOrigins = [
-    'https://thinknode-customer.vercel.app',
-    'https://thinknode-admin.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:5174'
+const cors = require('cors');
+
+// Map frontend origins to their allowed API endpoint prefixes
+const corsOriginMap = [
+    {
+        origin: 'https://thinknode-customer.vercel.app',
+        pathPrefix: '/api/customer'
+    },
+    {
+        origin: 'https://thinknode-admin.vercel.app',
+        pathPrefix: '/api/admin'
+    },
+    {
+        origin: 'http://localhost:5173',
+        pathPrefix: '/api/customer'
+    },
+    {
+        origin: 'http://localhost:5174',
+        pathPrefix: '/api/admin'
+    }
 ];
 
-app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, false); // Block requests with no origin (e.g., curl, Postman)
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        } else {
-            return callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
-    exposedHeaders: ['Access-Control-Allow-Private-Network']
-}));
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (!origin) return next();
+    const match = corsOriginMap.find(
+        entry => origin === entry.origin && req.path.startsWith(entry.pathPrefix)
+    );
+    if (match) {
+        cors({
+            origin: match.origin,
+            credentials: true,
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
+            exposedHeaders: ['Access-Control-Allow-Private-Network']
+        })(req, res, next);
+    } else {
+        res.status(403).json({ success: false, message: 'CORS policy: This origin is not allowed for this endpoint.' });
+    }
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
