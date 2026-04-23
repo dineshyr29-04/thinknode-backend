@@ -39,9 +39,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
-const cors = require('cors');
-
 // Map frontend origins to their allowed API endpoint prefixes
 const corsOriginMap = [
     {
