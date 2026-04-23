@@ -55,17 +55,29 @@ const corsOriginMap = [
     },
     {
         origin: 'http://localhost:5174',
-        pathPrefix: '/api/admin'
+        pathPrefix: '/api/customer'
     }
 ];
 
-app.use(cors({
-    origin: true, // Reflects the request origin, effectively allowing all
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
-    exposedHeaders: ['Access-Control-Allow-Private-Network']
-}));
+// Dynamic CORS handling per-request using the origin/path mapping above.
+app.use((req, res, next) => {
+    const originHeader = req.get('Origin');
+    const allowed = corsOriginMap.some(m => m.origin === originHeader && req.path.startsWith(m.pathPrefix));
+
+    const corsOptions = {
+        origin: (originValue, callback) => {
+            if (!originValue) return callback(null, true); // allow non-browser or same-origin requests
+            if (allowed) return callback(null, true);
+            return callback(new Error('Not allowed by CORS'));
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
+        exposedHeaders: ['Access-Control-Allow-Private-Network']
+    };
+
+    return cors(corsOptions)(req, res, next);
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
