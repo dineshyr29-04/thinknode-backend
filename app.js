@@ -39,14 +39,29 @@ app.use((req, res, next) => {
     }
     next();
 });
-// Permissive CORS: reflect incoming Origin to allow credentialed requests from any origin
-app.use(cors({
-    origin: true, // reflect request origin
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
-    exposedHeaders: ['Access-Control-Allow-Private-Network']
-}));
+// Whitelist CORS: only allow these four frontends to access any route
+const allowedOrigins = [
+    'https://thinknode-customer.vercel.app',
+    'https://thinknode-admin.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:5174'
+];
+
+app.use((req, res, next) => {
+    const corsOptions = {
+        origin: (originValue, callback) => {
+            if (!originValue) return callback(null, true); // allow non-browser or same-origin requests
+            if (allowedOrigins.includes(originValue)) return callback(null, true);
+            return callback(new Error('Not allowed by CORS'));
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Access-Control-Allow-Private-Network'],
+        exposedHeaders: ['Access-Control-Allow-Private-Network']
+    };
+
+    return cors(corsOptions)(req, res, next);
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
