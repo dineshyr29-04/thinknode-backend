@@ -39,10 +39,12 @@ app.use((req, res, next) => {
     }
     next();
 });
-// Whitelist CORS: only allow these four frontends to access any route
+// Whitelist CORS: build from env vars (so changing .env updates CORS) with sensible defaults
+const clientUrl = process.env.CLIENT_URL || 'https://thinknode-customer.vercel.app';
+const adminUrl = process.env.ADMIN_URL || 'https://thinknode-admin.vercel.app';
 const allowedOrigins = [
-    'https://thinknode-customer.vercel.app',
-    'https://thinknode-admin.vercel.app',
+    clientUrl,
+    adminUrl,
     'http://localhost:5173',
     'http://localhost:5174'
 ];
@@ -76,6 +78,9 @@ app.use('/api/services', serviceRoutes);
 
 // Health check for quick remote connectivity tests
 app.get('/health', (req, res) => res.status(200).send('ok'));
+
+// Root route for Render or simple browser checks
+app.get('/', (req, res) => res.status(200).json({ success: true, message: 'API running' }));
 
 // Error Handling Middleware
 app.use(notFound);
