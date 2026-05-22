@@ -30,17 +30,22 @@ Lightweight backend API for the ThinkNode platform. Provides:
 **Environment**
 - `PORT` - server port (default: `5000`)
 - `NODE_ENV` - `development` or `production`
-- `DB_HOST` - Postgres host (default: `localhost`)
-- `DB_PORT` - Postgres port (default: `5432`)
-- `DB_USER` - Postgres user
-- `DB_PASSWORD` - Postgres password
-- `DB_NAME` - Postgres database name
+- `DATABASE_URL` - preferred Postgres connection string for Render and other hosted databases
+- `DB_HOST` - Postgres host, only if you are not using `DATABASE_URL`
+- `DB_PORT` - Postgres port, only if you are not using `DATABASE_URL`
+- `DB_USER` - Postgres user, only if you are not using `DATABASE_URL`
+- `DB_PASSWORD` - Postgres password, only if you are not using `DATABASE_URL`
+- `DB_NAME` - Postgres database name, only if you are not using `DATABASE_URL`
 - `JWT_SECRET` - Secret for signing JWTs
+- `CLIENT_URL` - customer frontend origin used by CORS
+- `ADMIN_URL` - admin frontend origin used by CORS
 - `ADMIN_WEBHOOK_URL` - Optional HTTPS endpoint to POST new order payloads to admin systems
 - `ADMIN_WEBHOOK_HEADERS` - Optional JSON string of headers for the admin webhook (e.g. '{"x-admin-key":"secret"}')
-- `CORS_ORIGIN` - (optional) comma-separated list of allowed origins for CORS
+- `CORS_ORIGIN` - legacy optional comma-separated list of allowed origins for CORS
 
-Create a `.env` file in the repository root and set the above variables before starting the app.
+Create a `.env` file in the repository root and set the above variables before starting the app locally.
+
+For Render, set the same values in the service environment variables dashboard. If you are using Render Postgres, copy the provided `DATABASE_URL` into the web service environment and keep `NODE_ENV=production`.
 
 **Database**
 - The project includes `database/schema.sql` to create required tables (admins, customers, services, orders, files, notifications).
@@ -106,7 +111,8 @@ Optional fields: `description`, `customization` (JSON), `budget`, `deadline`. Fi
 
 **Troubleshooting**
 - No logs on request: Ensure process is running and port is correct. Check `server.js` and `logger` output.
-- CORS errors from deployed frontend: confirm backend is HTTPS and CORS whitelists the frontend origin.
+- Database connection fails on Render: confirm the web service has `DATABASE_URL` or the full `DB_*` set, and that the values are set on the web service itself, not only on the database service.
+- CORS errors from deployed frontend: confirm backend is HTTPS and `CLIENT_URL` and `ADMIN_URL` match the real frontend origins exactly.
 - Socket not receiving events: ensure frontend connects to the same backend socket URL and the server has sockets initialized in `server.js`.
 - Webhook not received: ensure `ADMIN_WEBHOOK_URL` is public and reachable; check server logs for webhook POST errors.
 

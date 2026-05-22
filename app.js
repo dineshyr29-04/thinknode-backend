@@ -39,12 +39,20 @@ app.use((req, res, next) => {
     }
     next();
 });
-// Whitelist CORS: build from env vars (so changing .env updates CORS) with sensible defaults
-const clientUrl = process.env.CLIENT_URL || 'https://thinknode-customer.vercel.app';
-const adminUrl = process.env.ADMIN_URL || 'https://thinknode-admin.vercel.app';
+// Whitelist CORS: build from env vars and normalize values so trailing slashes/spaces do not break exact matching
+const normalizeOrigin = (value) => {
+    if (!value) return null;
+    return value.trim().replace(/\/+$/, '');
+};
+
 const allowedOrigins = [
-    clientUrl,
-    adminUrl,
+    normalizeOrigin(process.env.CLIENT_URL) || 'https://thinknode-customer.vercel.app',
+    normalizeOrigin(process.env.ADMIN_URL) || 'https://thinknode-admin.vercel.app',
+    ...(
+        process.env.CORS_ORIGIN
+            ? process.env.CORS_ORIGIN.split(',').map(normalizeOrigin).filter(Boolean)
+            : []
+    ),
     'http://localhost:5173',
     'http://localhost:5174'
 ];
@@ -53,7 +61,8 @@ app.use((req, res, next) => {
     const corsOptions = {
         origin: (originValue, callback) => {
             if (!originValue) return callback(null, true); // allow non-browser or same-origin requests
-            if (allowedOrigins.includes(originValue)) return callback(null, true);
+            const normalizedOrigin = normalizeOrigin(originValue);
+            if (allowedOrigins.includes(normalizedOrigin)) return callback(null, true);
             return callback(new Error('Not allowed by CORS'));
         },
         credentials: true,
