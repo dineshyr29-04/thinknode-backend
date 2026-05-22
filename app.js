@@ -57,6 +57,10 @@ const allowedOrigins = [
     'http://localhost:5174'
 ];
 
+logger.info(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+logger.info(`CLIENT_URL env: ${normalizeOrigin(process.env.CLIENT_URL) || 'not set'}`);
+logger.info(`ADMIN_URL env: ${normalizeOrigin(process.env.ADMIN_URL) || 'not set'}`);
+
 app.use((req, res, next) => {
     const corsOptions = {
         origin: (originValue, callback) => {
