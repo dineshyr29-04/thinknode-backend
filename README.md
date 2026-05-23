@@ -43,6 +43,12 @@ Lightweight backend API for the ThinkNode platform. Provides:
 - `ADMIN_WEBHOOK_HEADERS` - Optional JSON string of headers for the admin webhook (e.g. '{"x-admin-key":"secret"}')
 - `CORS_ORIGIN` - legacy optional comma-separated list of allowed origins for CORS
 
+Important: `CLIENT_URL` and `ADMIN_URL` are frontend origins for CORS, not API base URLs. The backend login endpoints are fixed:
+- Admin login: `/api/admin/login`
+- Customer login: `/api/customer/login`
+
+If your frontend builds a URL like `//api/admin/login`, remove the extra leading slash in the frontend code and use one clean API base URL, for example `https://your-backend-domain.com/api`.
+
 Create a `.env` file in the repository root and set the above variables before starting the app locally.
 
 For Render, set the same values in the service environment variables dashboard. If you are using Render Postgres, copy the provided `DATABASE_URL` into the web service environment and keep `NODE_ENV=production`.

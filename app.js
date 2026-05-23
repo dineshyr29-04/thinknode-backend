@@ -13,6 +13,14 @@ const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 
+// Normalize accidental double slashes in API paths, e.g. "//api/admin/login".
+app.use((req, res, next) => {
+    if (req.url && req.url.includes('//')) {
+        req.url = req.url.replace(/^\/{2,}/, '/').replace(/\/{2,}/g, '/');
+    }
+    next();
+});
+
 // Security Middlewares
 app.use(helmet());
 
